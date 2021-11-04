@@ -1,8 +1,17 @@
 <template lang="pug">
   .payment-history-details
+    ui-debio-modal(
+      :show="!!messageError"
+      :show-title="false"
+      :show-cta="false"
+      @onClose="$router.push({ name: 'customer-payment-history' })"
+    )
+      | {{ messageError }}
+
     ui-debio-modal(:show="isLoading" disable-dismiss :show-title="false" :show-cta="false")
       | {{ loadingPlaceholder }}
-    .payment-history-details__wrapper
+
+    .payment-history-details__wrapper(v-if="hasPaymentDetails")
       ui-debio-card(block centered-content)
         h2.payment-history-details__title {{ computeDetailsTitle }}
         .payment-history-details__content
@@ -22,7 +31,7 @@
             .payment-details__status
               .payment-details__field
                 .test__title Test status
-                .test__status Rejected
+                .test__status {{ payment.test_status || "-" }}
               .payment-details__field
                 .payment__title Payment Status
                 .payment__status {{ payment.status }}
@@ -74,8 +83,11 @@
 
 <script>
 import { alertIcon } from "@/common/icons"
-import Button from "@/common/components/Button"
 import { fetchPaymentDetails } from "@/common/lib/orders";
+import { queryDnaSamples } from "@/common/lib/polkadot-provider/query/genetic-testing"
+import { mapState } from "vuex"
+
+import Button from "@/common/components/Button"
 import metamaskServiceHandler from "@/common/lib/metamask/mixins/metamaskServiceHandler"
 
 export default {
@@ -85,13 +97,21 @@ export default {
 
   components: { Button },
 
-  data: () => ({ alertIcon, rewardPopup: false, payment: {} }),
+  data: () => ({ alertIcon, messageError: null, rewardPopup: false, payment: {} }),
 
   computed: {
+    ...mapState({
+      api: (state) => state.substrate.api
+    }),
+
     computeDetailsTitle() {
       return this.payment?.status === "Paid"
         ? "Thank you for your order"
         : `${this.payment?.status} Order`
+    },
+
+    hasPaymentDetails() {
+      return Object.keys(this.payment)?.length
     }
   },
 
@@ -105,8 +125,17 @@ export default {
 
   methods: {
     async fetchDetails() {
-      const dataPayment = await this.metamaskDispatchAction(fetchPaymentDetails, this.$route.params.id)
-      this.payment = dataPayment
+      try {
+        const dataPayment = await this.metamaskDispatchAction(fetchPaymentDetails, this.$route.params.id)
+        const data = await queryDnaSamples(this.api, dataPayment.dna_sample_tracking_id)
+
+        this.payment = { ...dataPayment, test_status: data?.status }
+      } catch(e) {
+        if (e.response.status === 404)
+          this.messageError = "Oh no! We can't find your selected order. Please select another one"
+
+        else this.messageError = "Something went wrong. Please try again later"
+      }
     },
 
     handleShowPopup(val) {

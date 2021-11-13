@@ -193,7 +193,7 @@ export default {
     }),
 
     passwordErrorMessages() {
-      return this.errorMessages || this.error
+      return this.errorMessages || this.error?.message
     }
   },
 

@@ -18,7 +18,7 @@
         v-model="password"
         outlined
         block
-        :error="error"
+        :error="!!error"
         validate-on-blur
         @keyup.enter="handleSubmitPassword"
         @blur="error = null"
@@ -134,7 +134,7 @@ export default {
     },
 
     passwordErrorMessages() {
-      return this.errorMessages || this.error
+      return this.errorMessages || this.error?.message
     }
   },
 

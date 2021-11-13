@@ -45,7 +45,7 @@
       :show="showModalPassword"
       title="Encrypt EMR files by input your password"
       disable-dismiss
-      @onClose="showModalPassword = false; wrongPassword = false"
+      @onClose="showModalPassword = false; error = null"
     )
       ui-debio-input(
         :errorMessages="passwordErrorMessages"
@@ -56,10 +56,10 @@
         v-model="password"
         outlined
         block
-        :error="wrongPassword"
+        :error="!!error"
         validate-on-blur
         @keyup.enter="finalSubmit"
-        @blur="wrongPassword = false"
+        @blur="error = null"
         @isError="handleError"
       )
 
@@ -69,7 +69,7 @@
           width="100"
           color="secondary"
           :disabled="isLoading"
-          @click="showModalPassword = false; wrongPassword = false"
+          @click="showModalPassword = false; error = null"
         ) Cancel
 
         Button(
@@ -278,7 +278,7 @@ export default {
     showModal: false,
     showModalConfirm: null,
     showModalPassword: false,
-    wrongPassword: false,
+    error: null,
     isLoading: false,
     showLoadingFiles: false,
     registerId: null,
@@ -329,7 +329,7 @@ export default {
     },
 
     passwordErrorMessages() {
-      return this.errorMessages || (this.wrongPassword ? "Password not match" : "")
+      return this.errorMessages || this.error?.message
     }
   },
 
@@ -503,14 +503,12 @@ export default {
           await registerElectronicMedicalRecord(this.api, this.wallet, this.emr)
         }
       } catch (e) {
-        this.wrongPassword = true
+        this.error = e
         this.isLoading = false
       }
     },
 
     async handleUpload(id, dataFile, index) {
-      this.wrongPassword = false
-
       try {
         this.wallet.unlock(this.password)
 
@@ -550,8 +548,8 @@ export default {
 
         this.showModalPassword = false
         this.showLoadingFiles = true
-      } catch {
-        this.wrongPassword = true
+      } catch (e) {
+        this.error = e
       }
     },
 

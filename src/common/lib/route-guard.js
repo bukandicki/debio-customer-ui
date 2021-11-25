@@ -42,6 +42,6 @@ export async function checkIsLoggedIn(to, from, next) {
     return address
   }
 
-  next("/sign-in")
+  next("/landing-page")
   return ""
 }

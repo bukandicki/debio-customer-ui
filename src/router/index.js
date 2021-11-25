@@ -1,15 +1,14 @@
 import Vue from "vue"
 import VueRouter from "vue-router"
-import {
-  indexRoutes,
-  customerRoutes
-} from "./routes"
+import indexRoutes from "./routes"
+import landingPageRoutes from "./routes/landing-page"
+
 
 Vue.use(VueRouter)
 
 const routes = [
   ...indexRoutes,
-  ...customerRoutes,
+  ...landingPageRoutes,
   {
     path: "*",
     component: () => import(/* webpackChunkName */ "@/views/404")

@@ -10,6 +10,7 @@
             :key="menu.id"
             :icon="menu.icon"
             size="24"
+            :class="{ 'notification-dot': menu.type === 'notification' && notifications.some(v => v.read === false) }"
             v-if="!menu.isAvatar"
             role="button"
             @click.prevent="handleHover($event, idx)"
@@ -56,11 +57,15 @@
                     router-link.notification-item(
                       role="button"
                       v-for="(notif, idx) in notifications"
+                      :class="{ 'notification-item--new': !notif.read }"
                       :key="idx"
+                      @mouseenter.native="handleNotificationRead(notif)"
                       :to="{ name: notif.route, params: notif.params }"
                     )
                       .notification-item__wrapper
-                        .notification-item__title(:aria-label="notif.message") {{ notif.message }}
+                        .notification-item__title(:aria-label="notif.message")
+                          | {{ notif.message }}
+
                         .notification-item__description(
                           :aria-label="compareDate(new Date(), new Date(parseInt(notif.timestamp)))"
                         )
@@ -230,6 +235,15 @@ export default {
       setMetamaskBalance: "metamask/SET_WALLET_BALANCE",
       clearWallet: "substrate/CLEAR_WALLET"
     }),
+
+    handleNotificationRead(notif) {
+      notif.read = true
+      this.$store.dispatch("substrate/updateDataListNotification", {
+        address: this.wallet.address,
+        role: "customer",
+        data: this.notifications
+      })
+    },
 
     async handleCopy(text) {
       await navigator.clipboard.writeText(text)
@@ -456,6 +470,9 @@ export default {
     color: #000000 !important
     text-decoration: none
 
+    &--new
+      color: #5640A5 !important
+
     &__wrapper
       position: relative
       padding: 0.688rem 1.438rem
@@ -534,6 +551,20 @@ export default {
       line-height: 150%
       color: #757274
 
+  .notification-dot
+    position: relative
+    transition: all cubic-bezier(.7, -0.04, .61, 1.14) .3s
+
+    &::after
+      content: ""
+      display: block
+      width: 13px
+      height: 13px
+      position: absolute
+      bottom: 2px
+      right: -1px
+      border-radius: 50%
+      background: #FF56E0
       
   .fade
     &-enter-active,

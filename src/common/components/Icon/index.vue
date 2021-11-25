@@ -35,20 +35,21 @@ export default {
 </script>
 
 <template lang="pug">
-  svg.ui-debio-icon(
-    :width="size"
-    :height="size"
-    v-html="icon"
-    xmlns="http://www.w3.org/2000/svg"
-    :viewBox="viewBox"
-    :fill="fillColor"
-    :stroke="strokeColor"
-    :stroke-width="computeStrokeWidth"
-    :style="computeStyle"
-    v-on="$listeners"
-    aria-hidden="true"
-    role="presentation"
-  )
+  .ui-debio-icon
+    svg(
+      :width="size"
+      :height="size"
+      v-html="icon"
+      xmlns="http://www.w3.org/2000/svg"
+      :viewBox="viewBox"
+      :fill="fillColor"
+      :stroke="strokeColor"
+      :stroke-width="computeStrokeWidth"
+      :style="computeStyle"
+      v-on="$listeners"
+      aria-hidden="true"
+      role="presentation"
+    )
 </template>
 
 <style lang="sass">

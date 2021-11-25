@@ -134,7 +134,8 @@ export default {
     error: {
       deep: true,
       immediate: true,
-      handler(val) {
+      handler(val, oldVal) {
+        if (oldVal) this.isError = null
         if (!val) return
 
         this._handleError(this.selectedOption)

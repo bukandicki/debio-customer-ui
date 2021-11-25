@@ -86,7 +86,8 @@ export default {
     error: {
       deep: true,
       immediate: true,
-      handler(val) {
+      handler(val, oldVal) {
+        if (oldVal) this.isError = null
         if (!val) return
 
         this._handleError(this.$attrs.value)
@@ -145,7 +146,7 @@ export default {
     padding: 0.875rem 1.125rem
     font-size: 1rem
     color: black
-    resize: none
+    resize: vertical
     @include body-text-medium-3
 
     &:focus

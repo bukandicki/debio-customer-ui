@@ -128,7 +128,7 @@
         variant="small"
         accept=".pdf"
         label="File input"
-        :clearFile="!isEdit"
+        :clearFile="!isEdit && clearFile"
         @isError="handleError"
         validate-on-blur
       )
@@ -365,16 +365,23 @@ export default {
     password: [ val => !!val || errorMessage.PASSWORD(8) ],
     emr: {
       title: [
-        val => !!val || errorMessage.REQUIRED
+        val => !!val || errorMessage.REQUIRED,
+        val => val && val.length < 50 || "Max. length 50 Char"
       ],
       category: [ val => !!val || errorMessage.REQUIRED ]
     },
     document: {
-      title: [ val => !!val || errorMessage.REQUIRED ],
-      description: [ val => !!val || errorMessage.REQUIRED ],
+      title: [
+        val => !!val || errorMessage.REQUIRED,
+        val => val && val.length < 50 || "Max. length 50 Char"
+      ],
+      description: [
+        val => !!val || errorMessage.REQUIRED,
+        val => val && val.length < 255 || "Max. length 255 Char"
+      ],
       file: [
         val => !!val || errorMessage.REQUIRED,
-        val => (val && val.size < 30000000) || errorMessage.FILE_SIZE(30),
+        val => (val && val.size < 2000000) || errorMessage.FILE_SIZE(2),
         val => (val && val.type === "application/pdf") || errorMessage.FILE_FORMAT("PDF")
       ]
     }
@@ -460,7 +467,6 @@ export default {
       fr.readAsArrayBuffer(file)
 
       this.onCloseModalDocument()
-      this.clearFile = false
     },
     
     onEdit(item) {
@@ -476,6 +482,7 @@ export default {
     },
 
     onCloseModalDocument() {
+      this.isEdit = false
       this.showModal = false
       Object.assign(this.document, { title: "", description: "", file: null })
       this.clearFile = true
@@ -489,6 +496,7 @@ export default {
     handleAddFile() {
       this.showModal = true
       this.isEdit = false
+      this.clearFile = false
     },
 
     handleModalPassword() {

@@ -66,7 +66,8 @@ export default {
     error: {
       deep: true,
       immediate: true,
-      handler(val) {
+      handler(val, oldVal) {
+        if (oldVal) this.isError = null
         if (!val) return
 
         this._handleError(this.selectedFile)
@@ -113,7 +114,7 @@ export default {
 
     handleBlur() {
       this.$nextTick(() => {
-        if (this.validateOnBlur && this.active && this.clearFile) this._handleError(this.selectedFile)
+        if (this.validateOnBlur && this.active && !this.clearFile) this._handleError(this.selectedFile)
         this.active = false
       })
     },

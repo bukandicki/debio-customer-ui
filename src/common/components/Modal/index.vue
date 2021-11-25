@@ -126,6 +126,8 @@ export default {
       padding: 2.25rem
       position: relative
       display: flex
+      max-height: 100vh
+      overflow-y: auto
       flex-direction: column
       align-items: center
       gap: 1.875rem
@@ -134,6 +136,16 @@ export default {
       box-shadow: 0 0.125rem 0.625rem rgba(0, 0, 0, 0.1)
       transform: translateY(-100vh)
       transition: all cubic-bezier(.7, -0.04, .61, 1.14) .25s
+
+      &::-webkit-scrollbar-track
+        background-color: #f2f2ff
+
+      &::-webkit-scrollbar
+        width: 0.25rem
+
+      &::-webkit-scrollbar-thumb
+        border-radius: 0.625rem
+        background: #a1a1ff
 
     &__card-close
       position: absolute !important

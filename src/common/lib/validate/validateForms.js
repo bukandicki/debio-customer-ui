@@ -12,28 +12,7 @@ export default {
   },
 
   created() {
-    Object.entries(this.$options.rules).forEach(([key, parentValue]) => {
-      if (key === "isDirty") return
-
-      if (Array.isArray(parentValue)) {
-        this.isDirty = {
-          ...this.isDirty,
-          [key]: null
-        }
-
-        return
-      }
-
-      Object.entries(parentValue).forEach(([childKey]) => {
-        this.isDirty = {
-          ...this.isDirty,
-          [key]: {
-            ...this.isDirty[key],
-            [childKey]: null
-          }
-        }
-      })
-    })
+    this.clearState()
   },
 
   methods: {
@@ -97,6 +76,31 @@ export default {
             [key]: {
               ...this.isDirty[key],
               [childKey]: Boolean(computeErrors(childKey, value, key)?.length)
+            }
+          }
+        })
+      })
+    },
+
+    clearState() {
+      Object.entries(this.$options.rules).forEach(([key, parentValue]) => {
+        if (key === "isDirty") return
+
+        if (Array.isArray(parentValue)) {
+          this.isDirty = {
+            ...this.isDirty,
+            [key]: null
+          }
+
+          return
+        }
+
+        Object.entries(parentValue).forEach(([childKey]) => {
+          this.isDirty = {
+            ...this.isDirty,
+            [key]: {
+              ...this.isDirty[key],
+              [childKey]: null
             }
           }
         })

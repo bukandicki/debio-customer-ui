@@ -23,6 +23,6 @@ export async function getServicesByCategory(category, flow) {
     service_flow: flow
   }
 
-  const { data : data } = await apiClientRequest.get("/labs", { params })
+  const { data : data } = await apiClientRequest.get("substrate/labs", { params })
   return data
 }

@@ -66,8 +66,18 @@
               span.order-details__file(title="PerdiatricRecord.vcf" aria-label="PerdiatricRecord.vcf" role="button" @click="handleDownloadFile") PerdiatricRecord.vcf
 
               .order-details__actions.d-flex.justify-space-between(v-if="$route.params.item.status !== 'Reject' && step === 1")
-                Button(width="130px" outlined color="secondary") REJECT
-                Button(width="130px" color="secondary" @click="step = 2") ACCEPT
+                Button(
+                  :disabled="$route.params.item.status !== 'Open'"
+                  width="130px"
+                  color="secondary"
+                  outlined
+                ) REJECT
+                Button(
+                  width="130px"
+                  :disabled="$route.params.item.status !== 'Open'"
+                  color="secondary"
+                  @click="step = 2"
+                ) ACCEPT
 
       transition(name="transition-slide-x" mode="out-in")
         section.upload-section.mt-6(v-if="step === 2")
@@ -138,7 +148,7 @@ export default {
       description: null
     },
     steppers: [
-      { number: 1, title: "", active: false },
+      { number: 1, title: "Confirm Order", active: false },
       { number: 2, title: "Upload Result", active: false },
       { number: 3, title: "Success", active: false }
     ]
@@ -149,7 +159,6 @@ export default {
       return this.steppers.map(stepper => {
         if (stepper.number === 1) return {
           ...stepper,
-          title: `${this.$route.params.item.status} Order`,
           active: stepper.number === this.step
         } 
         return { ...stepper, active: stepper.number === this.step }
@@ -180,6 +189,11 @@ export default {
         englishAlphabet
       ]
     }
+  },
+
+  created() {
+    if (this.$route.params.item.status === "In Progress") this.step = 2
+    else if (this.$route.params.item.status === "Done") this.step = 3
   },
 
   methods: {

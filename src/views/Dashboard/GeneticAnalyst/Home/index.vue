@@ -56,7 +56,7 @@ export default {
         name: "Neurology Analysis A",
         createdAt: "28 Jan 2022",
         price: "3600  DBIO",
-        status: "In Progres"
+        status: "In Progress"
       },
       {
         id: "0xa654e848bbb9ec1bb817cca5f005f5a24148eab00d3af3254200dd99a78fd40a",
@@ -70,7 +70,7 @@ export default {
         name: "Neurology Analysis C",
         createdAt: "25 Jan 2022",
         price: "1400 DBIO",
-        status: "In Progres"
+        status: "In Progress"
       },
       {
         id: "0xa654e848bbb9ec1bb817cca5f005f5a24148eab00d3af3254200dd99a78fd40b",

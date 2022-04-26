@@ -4,7 +4,7 @@
       ui-debio-card(width="100%")
         v-row.resultBody
           v-col(cols="12" md="9")
-            ui-debio-card(width="100%" height="100%" class="mt-2")
+            ui-debio-card(width="100%" class="mt-2")
               template
                 v-progress-linear(
                   v-if="resultLoading"
@@ -13,15 +13,14 @@
                 )
                 v-card-text
                   embed(
-                    :src="reportResult"
-                    type="application/pdf"
-                    v-if="isDataPdf"
+                    :src="`${result}#view=fitH`"
                     scrolling="auto"
                     height="500px"
                     width="100%"
+                    type="application/pdf"
                   )
                   div
-                    span {{dummyResult.title}} 
+                    span {{dummyResult.title}}
                     br
                   div
                     span {{dummyResult.subTitle}}
@@ -34,6 +33,7 @@
                 :sub-title="file.fileSubTitle"
                 tiny-card
                 with-icon
+                role="button"
                 @click="actionDownload(index)"
               )
                 ui-debio-icon(
@@ -89,7 +89,7 @@
             interactive
             @input="getRating"
           )
-          ui-debio-text-area(
+          ui-debio-textarea(
             :rules="$options.rules.review"
             variant="small"
             label="Write a review"
@@ -112,14 +112,15 @@
 </template>
 
 <script>
-import ipfsWorker from "@/common/lib/ipfs/ipfs-worker";
-import { downloadDecryptedFromIPFS } from "@/common/lib/ipfs";
-import { mapState } from "vuex";
-import { queryDnaTestResults } from "@debionetwork/polkadot-provider";
-import { queryLabById } from "@debionetwork/polkadot-provider";
-import { queryOrderDetailByOrderID, queryServiceById } from "@debionetwork/polkadot-provider";
-import { hexToU8a } from "@polkadot/util";
-import { submitRatingOrder, getRatingByOrderId } from "@/common/lib/api";
+import { mapState } from "vuex"
+import Kilt from "@kiltprotocol/sdk-js"
+import CryptoJS from "crypto-js"
+import { queryDnaTestResults } from "@debionetwork/polkadot-provider"
+import { queryLabById } from "@debionetwork/polkadot-provider"
+import { downloadFile, decryptFile, downloadDocumentFile, getIpfsMetaData } from "@/common/lib/pinata-proxy"
+import { queryOrderDetailByOrderID, queryServiceById } from "@debionetwork/polkadot-provider"
+import { u8aToHex } from "@polkadot/util"
+import { submitRatingOrder, getRatingByOrderId } from "@/common/lib/api"
 import { downloadIcon, debioIcon, creditCardIcon, starIcon, checkCircleIcon } from "@debionetwork/ui-icons"
 import errorMessage from "@/common/constants/error-messages"
 
@@ -154,7 +155,6 @@ export default {
     showModal: false,
     showModalRating: false,
     files: [],
-    fileDownloadIndex: 0,
     baseUrl: "https://ipfs.io/ipfs/",
     dummyResult: {
       title: "Whole Genome Sequencing Test Report",
@@ -164,56 +164,57 @@ export default {
   }),
 
   async mounted() {
-    this.resultLoading = true;
-    this.idOrder = this.$route.params.idOrder;
-    this.privateKey = hexToU8a(this.mnemonicData.privateKey);
-    this.ownerAddress = this.wallet.address;
-    await this.getRatingTestResult();
-    await this.getTestResult();
-    await this.getLabServices();
-    await this.getFileUploaded();
-    await this.parseResult();
+    this.resultLoading = true
+    this.idOrder = this.$route.params.idOrder
+    const cred = Kilt.Identity.buildFromMnemonic(this.mnemonicData.toString(CryptoJS.enc.Utf8))
+    this.privateKey = u8aToHex(cred.boxKeyPair.secretKey)
+    this.ownerAddress = this.wallet.address
+    await this.getRatingTestResult()
+    await this.getTestResult()
+    await this.getLabServices()
+    await this.getFileUploaded()
+    await this.parseResult()
   },
 
   methods: {
     async getRatingTestResult() {
       try {
-        const data = await getRatingByOrderId(this.idOrder);
-        this.ratingTestResult = data.rating;
-        this.ratingTitle = `Rating ${this.ratingTestResult},0`;
-        this.ratingSubTitle = data.review;
+        const data = await getRatingByOrderId(this.idOrder)
+        this.ratingTestResult = data?.rating
+        this.ratingTitle = `Rating ${this.ratingTestResult},0`
+        this.ratingSubTitle = data?.review
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
 
     async getTestResult() {
       try {
-        this.order = await queryOrderDetailByOrderID(this.api, this.idOrder);
-        this.ownerAddress = this.order.customerEthAddress;
-        
+        this.order = await queryOrderDetailByOrderID(this.api, this.idOrder)
+        this.ownerAddress = this.order.customerEthAddress
+
         this.testResult = await queryDnaTestResults(
           this.api,
           this.order.dnaSampleTrackingId
-        );
+        )
       } catch (error) {
-        this.resultLoading = false;
-        console.error(error);
+        this.resultLoading = false
+        console.error(error)
       }
     },
 
     async getLabServices() {
       try {
-        this.lab = await queryLabById(this.api, this.testResult.labId);
-        this.services = await queryServiceById(this.api, this.order.serviceId);
+        this.lab = await queryLabById(this.api, this.testResult.labId)
+        this.services = await queryServiceById(this.api, this.order.serviceId)
 
-        this.publicKey = this.lab.info.boxPublicKey;
-        this.serviceCategory = this.services.info.category;
-        this.serviceName = this.services.info.name;
+        this.publicKey = this.lab.info.boxPublicKey
+        this.serviceCategory = this.services.info.category
+        this.serviceName = this.services.info.name
       } catch (error) {
-        this.resultLoading = false;
-        this.services = [];
-        console.error(error);
+        this.resultLoading = false
+        this.services = []
+        console.error(error)
       }
     },
 
@@ -226,7 +227,7 @@ export default {
             fileLink: this.testResult.reportLink,
             fileTitle: "Download Report",
             fileSubTitle: "Download Your Test Report"
-          });
+          })
         }
 
         if (this.testResult.resultLink !== "") {
@@ -236,65 +237,42 @@ export default {
             fileLink: this.testResult.resultLink,
             fileTitle: "Download Raw Data",
             fileSubTitle: "Download Your Genomic Data"
-          });
+          })
         }
       } catch (error) {
-        this.resultLoading = false;
-        console.error(error);
+        this.resultLoading = false
+        console.error(error)
       }
     },
 
     async parseResult() {
       try {
-        const path = this.files[0].fileLink.replace(this.baseUrl, "");
-        const secretKey = this.privateKey;
-        const publicKey = this.lab.info.boxPublicKey;
-        
-        const pair = {
-          secretKey,
-          publicKey
-        };
+        const path = this.files[0].fileLink
+        const pair = { secretKey: this.privateKey, publicKey: this.publicKey }
 
-        const typeFile = "text/plain";
-        const channel = new MessageChannel();
-        channel.port1.onmessage = ipfsWorker.workerDownload;
-        ipfsWorker.workerDownload.postMessage({ path, pair, typeFile }, [
-          channel.port2
-        ]);
+        const { type, data } = await downloadFile(path, true)
 
-        ipfsWorker.workerDownload.onmessage = (event) => {
-          const regexMatchPdf = /^(data:application\/\pdf)/g 
-          const isDataPdf = regexMatchPdf.test(event.data);
-          this.isDataPdf = isDataPdf;
-          
-          this.result = event.data;
-          this.resultLoading = false;
-        };
+        const decryptedFile = decryptFile(data, pair, type)
+        const fileBlob = window.URL.createObjectURL(new Blob([decryptedFile], { type }))
+
+        this.result = fileBlob
+        this.resultLoading = false
       } catch (error) {
-        this.resultLoading = false;
-        console.error(error);
+        this.resultLoading = false
+        console.error(error)
       }
     },
 
     async actionDownload(index) {
-      this.fileDownloadIndex = index;
-
       try {
-        const fileName = this.files[this.fileDownloadIndex].fileName;
-        const path = this.files[this.fileDownloadIndex].fileLink.replace(
-          this.baseUrl,
-          ""
-        );
+        const { rows } = await getIpfsMetaData(this.files[index].fileLink.split("/").pop())
+        const { type, data } = await downloadFile(this.files[index].fileLink, true)
+        const pair = { secretKey: this.privateKey, publicKey: this.publicKey }
+        const decryptedFile = decryptFile(data, pair, type)
 
-        await downloadDecryptedFromIPFS(
-          path, 
-          this.privateKey, 
-          this.publicKey, 
-          fileName, 
-          "text/plain"
-        );
+        await downloadDocumentFile(decryptedFile, rows[0].metadata.name, type)
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     },
 
@@ -320,18 +298,18 @@ export default {
           this.order.customerId,
           this.rating,
           this.review
-        );
+        )
 
-        this.ratingTestResult = data.rating;
-        this.ratingTitle = `Rating ${this.ratingTestResult},0`;
-        this.ratingSubTitle = data.review;
+        this.ratingTestResult = data.rating
+        this.ratingTitle = `Rating ${this.ratingTestResult},0`
+        this.ratingSubTitle = data.review
 
         this.showModalRating = false
         this.showModal = true
       } catch (error) {
         this.showModalRating = false
         this.showModal = true
-        console.error(error);
+        console.error(error)
       }
     }
   },
@@ -345,14 +323,16 @@ export default {
 
     reportResult() {
       if (this.dialog) {
-        return "";
+        return ""
       }
 
       if (this.resultLoading) {
-        return "Decrypting report..";
+        return "Decrypting report.."
       }
-      
-      return this.result ? this.result : "No report available for this result";
+
+      console.log(this.result);
+
+      return this.result ? this.result : "No report available for this result"
     },
 
     modalTitle() {

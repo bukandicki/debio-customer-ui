@@ -37,7 +37,7 @@
             h3.customer-emr-details__viewer-loading.text-center(v-if="isLoading") {{ message }}
             embed.customer-emr-details__viewer-content(
               v-if="!isLoading && result"
-              :src="`${result}#view=fitH`"
+              :src="`${result}#toolbar=0&navpanes=0&scrollbar=0`"
               type="application/pdf"
             )
 </template>

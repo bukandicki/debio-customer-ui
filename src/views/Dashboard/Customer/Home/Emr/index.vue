@@ -226,7 +226,7 @@ export default {
 
       if (dataEMR !== null) {
         const listEMR = dataEMR.reduce((filtered, current) => {
-          if (filtered.every(v => v !== current)) filtered.push(current)
+          if (filtered.every(v => v.id !== current.id)) filtered.push(current)
 
           return filtered
         }, [])

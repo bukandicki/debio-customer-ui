@@ -112,7 +112,7 @@ export default {
 
     async lastEventData(val) {
       if(val !== null) {
-        if(val.method === "Withdraw" || val.section === "balances") {
+        if(val.section === "geneticAnalysisOrders") {
           await this.fetchGeneticAnalysisData()
         }
       }

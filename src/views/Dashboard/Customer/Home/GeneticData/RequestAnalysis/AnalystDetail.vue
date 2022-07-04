@@ -190,7 +190,6 @@ export default {
       let lastOrder 
       try {
         lastOrder = await queryLastGeneticAnalysisOrderByCustomerId(this.api, this.wallet.address)
-        console.log(lastOrder)
 
         return lastOrder.status
       } catch (error) {

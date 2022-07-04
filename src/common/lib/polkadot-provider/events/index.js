@@ -1,9 +1,7 @@
 import { customerHandler } from "@/common/lib/polkadot-provider/events/handlers/customer"
-import { labHandler } from "@/common/lib/polkadot-provider/events/handlers/lab"
 
 const handlers = {
-  customer: customerHandler,
-  lab: labHandler
+  customer: customerHandler
 }
 
 export async function processEvent(state, address, event, role) {

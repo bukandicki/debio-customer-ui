@@ -32,8 +32,8 @@ const handler = {
   },
   geneticTesting: async (dataEvent, value, valueMessage) => {
     const data = dataEvent[0]
-    const status = data["status"]
     const id = data[value]
+    const status = data["status"]
     const params = { id: id }
     
     const formatedHash = `${data?.trackingId.substr(0, 4)}...${data?.trackingId?.substr(data?.trackingId?.length - 4)}`

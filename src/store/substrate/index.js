@@ -6,7 +6,7 @@ import { Keyring } from "@polkadot/keyring"
 import localStorage from "@/common/lib/local-storage"
 import masterConfigEvent from "./event-types.json"
 import { ApiPromise, WsProvider } from "@polkadot/api"
-import { processEvent } from "@/common/lib/polkadot-provider/events"
+import { processEvent, eventTypes } from "@debionetwork/polkadot-provider"
 
 const {
   cryptoWaitReady
@@ -102,7 +102,7 @@ export default {
     }
   },
   actions: {
-    async connect({ commit, dispatch, state }) {
+    async connect({ commit }) {
       try {
         commit("SET_IS_CONNECTED", false)
         commit("SET_LOADING_API", true)
@@ -133,7 +133,6 @@ export default {
           "rewards",
           "orders",
           "geneticTesting",
-          "balances",
           "electronicMedicalRecord",
           "geneticData",
           "geneticAnalysisOrders",
@@ -144,28 +143,8 @@ export default {
         api.query.system.events((events) => {
           events.forEach((record) => {
             const { event } = record
-            if (state?.lastEventData === event) return
             if (allowedSections.includes(event.section)) {
-              const dataEvent = JSON.parse(event.data.toString())
               if (event.method === "OrderPaid") localStorage.removeLocalStorageByName("lastOrderStatus")
-        
-              if (event.method === "OrderRefunded") {
-                const id = dataEvent[0].id
-                const computeId = `${id.substr(0, 4)}...${id.substr(id.length - 4)}`
-                
-                dispatch("addAnyNotification", {
-                  address: state.wallet.address,
-                  dataAdd: {
-                    message: `Your service fee from (${computeId}) has been rejected. Click here to see your order details.`,
-                    data: dataEvent,
-                    route: "order-history-detail",
-                    params: { id: dataEvent[0].id }
-                  },
-                  role: "customer"
-                }) 
-                
-              }
-              
               commit("SET_LAST_EVENT", event)
             }
           })
@@ -292,7 +271,7 @@ export default {
         console.error(err)
       }
     },
-    async addListNotification({ commit, state }, { address, event, role }) {
+    async addListNotification({ commit }, { address, event, role }) {
       try {
         const storageName = "LOCAL_NOTIFICATION_BY_ADDRESS_" + address + "_" + role
         const listNotificationJson = localStorage.getLocalStorageByName(storageName)
@@ -303,9 +282,9 @@ export default {
         }
 
         // If event section defined then process event
-        if (state.configEvent["role"][role][event.section] && state.configEvent["role"][role][event.section][event.method]) {
-          const { statusAdd, message, data, params } = await processEvent(state, address, event, role)
-          const route = state.configEvent["role"][role][event.section][event.method].route
+        if (eventTypes["role"][role][event.section] && eventTypes["role"][role][event.section][event.method]) {
+          const { statusAdd, message, data, params } = await processEvent(address, event, role, store)
+          const route = eventTypes["role"][role][event.section][event.method].route
           const dateSet = new Date()
           const timestamp = dateSet.getTime().toString()
           const notifDate = dateSet.toLocaleString("en-US", {
